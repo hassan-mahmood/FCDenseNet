@@ -7,3 +7,7 @@ __pycache__
 .weights
 .DS_Store
 ._.DS_Store
+data/*
+docs/*
+.idea/*
+.gitignore

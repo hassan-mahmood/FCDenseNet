@@ -1,32 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
-Sky = [128,128,128]
-Building = [128,0,0]
-Pole = [192,192,128]
-Road = [128,64,128]
-Pavement = [60,40,222]
-Tree = [128,128,0]
-SignSymbol = [192,128,128]
-Fence = [64,64,128]
-Car = [64,0,128]
-Pedestrian = [64,64,0]
-Bicyclist = [0,128,192]
+Table = [255,0,0]
+#Background = [255,255,255]
 Unlabelled = [0,0,0]
 
 DSET_MEAN = [0.41189489566336, 0.4251328133025, 0.4326707089857]
 DSET_STD = [0.27413549931506, 0.28506257482912, 0.28284674400252]
 
-label_colours = np.array([Sky, Building, Pole, Road, Pavement,
-      Tree, SignSymbol, Fence, Car, Pedestrian, Bicyclist, Unlabelled])
+label_colours = np.array([Table, Unlabelled])
 
 
-def view_annotated(tensor, plot=True):
+def view_annotated(filename,tensor, plot=True):
     temp = tensor.numpy()
     r = temp.copy()
     g = temp.copy()
     b = temp.copy()
-    for l in range(0,11):
+    for l in range(0,2):
         r[temp==l]=label_colours[l,0]
         g[temp==l]=label_colours[l,1]
         b[temp==l]=label_colours[l,2]
@@ -39,7 +30,9 @@ def view_annotated(tensor, plot=True):
         plt.imshow(rgb)
         plt.show()
     else:
-        return rgb
+        plt.imsave(os.path.join('results',filename),rgb)
+        print('Saved: ',filename)
+        #return rgb
 
 def decode_image(tensor):
     inp = tensor.numpy().transpose((1, 2, 0))
