@@ -55,7 +55,6 @@ def labelTopng(label, img_name):
     '''
     label = label.detach().numpy()
     label_pil = colorize_mask(label)
-    print('Image name:',img_name)
     label_pil.save(img_name)
 
 

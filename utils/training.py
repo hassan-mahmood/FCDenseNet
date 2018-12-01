@@ -177,16 +177,17 @@ def view_sample_predictions(model, loader, n):
         target = target.type('torch.LongTensor')
 
         output = model(input)
-        print('Pred shape:', output.shape)
+        #print('Pred shape:', output.shape)
         output = output.data.max(1)[1].squeeze_(1).squeeze_(0)
-        print('Target shape:', target.shape)
+        #print('Target shape:', target.shape)
 
-        print('Pred shape:', output.shape)
+        #print('Pred shape:', output.shape)
         output=output.type('torch.FloatTensor')
-        #tools.labelTopng(target, str(idx) + 'target.jpg')
+
+        #uncomment below line to save the results
         tools.labelTopng(output, os.path.join('results/',str(imgname)))
         output=output.type('torch.LongTensor')
-        print('Output shape:',output.shape)
+        #print('Output shape:',output.shape)
         #for calculating accuracy
         #output = output.data.max(1)[1].squeeze_(1).squeeze_(0)
         label_trues.append(target.numpy())

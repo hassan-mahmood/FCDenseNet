@@ -6,11 +6,11 @@ import os
 import cv2
 
 resultsdir='../masks/'
-outdir='../results/'
+outdir='../outputs/'
 files=os.listdir(resultsdir)
 
 for file in files:
-    img = cv2.imread(os.path.join('data/images2/',file))
+    img = cv2.imread(os.path.join('../images/',file))
     mask = cv2.imread(os.path.join(resultsdir,file),0)
     mask[mask != 255] = 0
     width,height=mask.shape
