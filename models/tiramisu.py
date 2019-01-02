@@ -16,6 +16,7 @@ class FCDenseNet(nn.Module):
 
         ## First Convolution ##
 
+        #added +2 in in_channels to have x and y coordinates
         self.add_module('firstconv', nn.Conv2d(in_channels=in_channels,
                   out_channels=out_chans_first_conv, kernel_size=3,
                   stride=1, padding=1, bias=True))
@@ -59,6 +60,8 @@ class FCDenseNet(nn.Module):
             prev_block_channels = growth_rate*up_blocks[i]
             cur_channels_count += prev_block_channels
 
+
+
         ## Final DenseBlock ##
 
         self.transUpBlocks.append(TransitionUp(
@@ -76,6 +79,7 @@ class FCDenseNet(nn.Module):
                out_channels=n_classes, kernel_size=1, stride=1,
                    padding=0, bias=True)
         self.softmax = nn.LogSoftmax(dim=1)
+
 
     def forward(self, x):
         out = self.firstconv(x)

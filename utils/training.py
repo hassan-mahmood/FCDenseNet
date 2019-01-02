@@ -185,7 +185,7 @@ def view_sample_predictions(model, loader, n):
         output=output.type('torch.FloatTensor')
 
         #uncomment below line to save the results
-        tools.labelTopng(output, os.path.join('results/',str(imgname)))
+        #tools.labelTopng(output, os.path.join('results/',str(imgname)))
         output=output.type('torch.LongTensor')
         #print('Output shape:',output.shape)
         #for calculating accuracy
