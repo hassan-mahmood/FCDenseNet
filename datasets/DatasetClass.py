@@ -7,7 +7,7 @@ import csv
 import torch
 import numpy as np
 
-class UNLV_Dataset(Dataset):
+class DatasetClass(Dataset):
     def __init__(self,imagespath,labelspath,transforms):
         self.imagespath=imagespath
         self.labelspath=labelspath

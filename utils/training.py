@@ -4,6 +4,7 @@ import math
 import string
 import random
 import shutil
+from sklearn.metrics import precision_recall_fscore_support, classification_report,accuracy_score
 
 import torch
 import torch.nn as nn
@@ -18,6 +19,7 @@ import numpy as np
 
 RESULTS_PATH = 'results/'
 WEIGHTS_PATH = 'weights/'
+
 
 
 def save_weights(model, epoch, loss, err):
@@ -115,29 +117,6 @@ def train(model, trn_loader, optimizer, criterion, epoch):
     trn_error /= len(trn_loader)
     return trn_loss, trn_error
 
-def test(model, test_loader, criterion, epoch=1):
-    model.eval()
-    test_loss = 0
-    test_error = 0
-    with torch.no_grad():
-        for idx, data in tqdm(enumerate(test_loader)):
-            data, target,imgname=data
-            # data = Variable(data.cuda(), volatile=True)
-            # target = Variable(target.cuda())
-            data = Variable(data)
-            data=data.type('torch.cuda.FloatTensor')
-            target = Variable(target)
-            target=target.squeeze(1)
-            target=target.type('torch.cuda.LongTensor')
-            output = model(data)
-            #test_loss += criterion(output, target).data[0]
-            test_loss += cross_entropy2d(output, target, True)
-            pred = get_predictions(output)
-            test_error += error(pred, target.data.cpu())
-
-    test_loss /= len(test_loader)
-    test_error /= len(test_loader)
-    return test_loss, test_error
 
 def adjust_learning_rate(lr, decay, optimizer, cur_epoch, n_epochs):
     """Sets the learning rate to the initially
@@ -165,62 +144,79 @@ def predict(model, input_loader, n_batches=1):
         predictions.append([input,target,pred])
     return predictions
 
-def view_sample_predictions(model, loader, n):
+def test(model, test_loader, criterion, epoch=1):
+    model.eval()
+    test_loss = 0
+    test_error = 0
+    with torch.no_grad():
+        for idx, data in tqdm(enumerate(test_loader)):
+            data, target,imgname=data
+            # data = Variable(data.cuda(), volatile=True)
+            # target = Variable(target.cuda())
+            data = Variable(data)
+            data=data.type('torch.cuda.FloatTensor')
+            target = Variable(target)
+            target=target.squeeze(1)
+            target=target.type('torch.cuda.LongTensor')
+            output = model(data)
+            #test_loss += criterion(output, target).data[0]
+            test_loss += cross_entropy2d(output, target, True)
+            pred = get_predictions(output)
+            test_error += error(pred, target.data.cpu())
 
+    test_loss /= len(test_loader)
+    test_error /= len(test_loader)
+    return test_loss, test_error
+
+
+def view_sample_predictions(model, loader):
+    model.eval()
+    f1_sum = 0
+    p_sum = 0
+    r_sum = 0
+    acc = 0
+    countval=0
     label_trues, label_preds = [], []
+    test_loss = 0
+    test_error=0
 
-    for idx,batch in tqdm(enumerate(loader)):
-        input, target,imgname=batch
-        imgname=imgname[0]
-        input = Variable(input)
-        input=input.type('torch.cuda.FloatTensor')
-        target = target.type('torch.LongTensor')
+    with torch.no_grad():
+        for idx,batch in tqdm(enumerate(loader)):
+            countval+=1
+            input, target,imgname=batch
+            imgname=imgname[0]
+            input = Variable(input)
+            input=input.type('torch.cuda.FloatTensor')
+            target = target.type('torch.LongTensor')
 
-        output = model(input)
-        #print('Pred shape:', output.shape)
-        output = output.data.max(1)[1].squeeze_(1).squeeze_(0)
-        #print('Target shape:', target.shape)
+            output2 = model(input)
+            output = output2.data.max(1)[1].squeeze_(1).squeeze_(0)
+            output=output.type('torch.FloatTensor')
 
-        #print('Pred shape:', output.shape)
-        output=output.type('torch.FloatTensor')
+            #uncomment below line to save the results
+            #tools.labelTopng(output, os.path.join('results/',str(imgname)))
+            output=output.type('torch.LongTensor')
+            label_trues.append(target.numpy())
+            label_preds.append(output.numpy())
+            results = precision_recall_fscore_support(target.flatten(), output.flatten(), average='micro')
 
-        #uncomment below line to save the results
-        #tools.labelTopng(output, os.path.join('results/',str(imgname)))
-        output=output.type('torch.LongTensor')
-        #print('Output shape:',output.shape)
-        #for calculating accuracy
-        #output = output.data.max(1)[1].squeeze_(1).squeeze_(0)
-        label_trues.append(target.numpy())
-        label_preds.append(output.numpy())
+            f1_sum += float(results[2])
+            p_sum += float(results[0])
+            r_sum += float(results[1])
+            acc += accuracy_score(target.flatten(), output.flatten())
+            test_loss += cross_entropy2d(output2, target, True)
+            pred = get_predictions(output2)
+            target = target.squeeze(1)
+            test_error += error(pred, target.data.cpu())
+
     metrics = tools.accuracy_score(label_trues, label_preds)
     metrics = np.array(metrics)
     metrics *= 100
+    test_loss /= len(loader)
+    test_error /= len(loader)
     print('''\
                 Accuracy: {0}
                 Accuracy Class: {1}
                 Mean IU: {2}'''.format(*metrics))
-
-
-# inputs, targets = next(iter(loader))
-    #
-    # data = Variable(inputs)
-    # data=data.type('torch.cuda.FloatTensor')
-    #
-    # # data = Variable(inputs.cuda(), volatile=True)
-    # # label = Variable(targets.cuda())
-    #
-    # output = model(data)
-    # pred = get_predictions(output)
-    # batch_size = inputs.size(0)
-    # for i in range(min(n, batch_size)):
-    #     #img_utils.view_image(inputs[i])
-    #     label = Variable(targets[i])
-    #     label=label.squeeze(2)
-    #     label = label.type('torch.LongTensor')
-    #     print('Target shape:',label.shape)
-    #     print('Pred shape:',pred[i].shape)
-    #     tools.labelTopng(label,str(i)+'target.jpg')
-    #     tools.labelTopng(pred[i], str(i) + 'pred.jpg')
-    #     #img_utils.view_annotated(str(i)+'target.jpg',label,False)
-    #     #img_utils.view_annotated(str(i)+'pred.jpg',pred[i],False)
-    #
+    print('\nF1: ', f1_sum / countval)
+    print('\nTest - Loss: {:.4f} | Acc: {:.4f}'.format(test_loss, 1 - test_error))

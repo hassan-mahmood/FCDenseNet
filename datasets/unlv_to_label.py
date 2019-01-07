@@ -22,8 +22,6 @@ parser.add_argument('--outdir',default='data/',help='Output directory to store t
 
 args=parser.parse_args()
 
-
-
 files=os.listdir(args.imagespath)
 trainlen=int(len(files)*0.8)
 splitdata=dict()
